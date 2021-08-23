@@ -10,7 +10,7 @@ public class Store {
     private Double importDutyTaxAmount = 0d;
     private final List<String> categoriesWithNoTax = new ArrayList<>();
 
-    public void addBasicTaxAmountForStore(Double taxAmount) {
+    public void addBasicTaxAmount(Double taxAmount) {
         this.basicTaxAmount = taxAmount;
     }
 
@@ -22,24 +22,27 @@ public class Store {
         this.categoriesWithNoTax.addAll(categoriesWithNoTax);
     }
 
-    private Double getRoundedValue(Double value) {
-        return isNull(value) ? 0d : BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
-    }
+    
 
     public String placeOrderAndGetReceipt(List<Item> itemList) {
         List<String> receipt = new LinkedList<>();
         List<Double> totalPrice = new ArrayList<>();
         List<Double> totalTax = new ArrayList<>();
         itemList.forEach(item -> {
-            Double price = getRoundedValue(item.getTotalPrice());
-            Double tax = getRoundedValue(item.getTax(this.categoriesWithNoTax, price, this.basicTaxAmount, this.importDutyTaxAmount));
+            Double price = roundValue(item.getTotalPrice());
+            Double tax = roundValue(item.getTax(this.categoriesWithNoTax, price, this.basicTaxAmount, this.importDutyTaxAmount));
             Double priceIncludingTax = price + tax;
             receipt.add(item.getReceipt(priceIncludingTax));
             totalPrice.add(priceIncludingTax);
             totalTax.add(tax);
         });
-        receipt.add("Tax: " + getRoundedValue(totalTax.stream().mapToDouble(Double::doubleValue).sum()));
-        receipt.add("Total: " + getRoundedValue(totalPrice.stream().mapToDouble(Double::doubleValue).sum()));
+
+        receipt.add("Total: " + roundValue(totalPrice.stream().mapToDouble(Double::doubleValue).sum()));
+        receipt.add("Tax: " + roundValue(totalTax.stream().mapToDouble(Double::doubleValue).sum()));
         return receipt.isEmpty() ? "No Products found" : String.join(",", receipt);
+    }
+
+    private Double roundValue(Double value) {
+        return isNull(value) ? 0d : BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }

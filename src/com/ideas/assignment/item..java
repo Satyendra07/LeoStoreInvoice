@@ -7,33 +7,21 @@ public class Item {
     private final String name;
     private final Double price;
     private final String category;
-    private final boolean isImported;
+    private final boolean isImportedItem;
 
-    public Item(Integer quantity, String name, Double price, String category, boolean isImported) {
+    public Item(Integer quantity, String name, Double price, String category, boolean isImportedItem) {
         this.quantity = quantity;
         this.name = name;
+        this.isImportedItem = isImportedItem;
         this.price = price;
         this.category = category;
-        this.isImported = isImported;
     }
 
     public Double getTotalPrice() {
-        if(checkIfItemOrdered()) {
+        if(this.quantity > 0) {
             return this.quantity * this.price;
         }
         return 0d;
-    }
-
-    private boolean checkIfItemOrdered() {
-        return this.quantity > 0;
-    }
-
-    private Double getTaxToApply(List<String> categoriesWithNoTax, Double importDutyTaxAmount, Double basicTaxAmount) {
-        Double taxAmount = this.isImported ? importDutyTaxAmount : 0d;
-        if(!categoriesWithNoTax.contains(this.category)) {
-            taxAmount = taxAmount + basicTaxAmount;
-        }
-        return taxAmount;
     }
 
     public String getReceipt(Double totalPrice) {
@@ -41,12 +29,20 @@ public class Item {
     }
 
     public Double getTax(List<String> categoriesWithNoTax, Double totalPrice, Double basicTaxAmount, Double importDutyTaxAmount) {
-        if(checkIfItemOrdered()) {
-            Double taxAmount = getTaxToApply(categoriesWithNoTax, importDutyTaxAmount, basicTaxAmount);
+        if(this.quantity > 0) {
+            Double taxAmount = getAppliedTax(categoriesWithNoTax, importDutyTaxAmount, basicTaxAmount);
             if(taxAmount > 0d) {
                 return (taxAmount/100) * totalPrice;
             }
         }
         return 0d;
+    }
+
+    private Double getAppliedTax(List<String> categoriesWithNoTax, Double importDutyTaxAmount, Double basicTaxAmount) {
+        Double taxAmount = this.isImportedItem ? importDutyTaxAmount : 0d;
+        if(!categoriesWithNoTax.contains(this.category)) {
+            taxAmount = taxAmount + basicTaxAmount;
+        }
+        return taxAmount;
     }
 }
